@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>謎解き - 謎1＆謎2</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 30px;
+      background-color: #f2f2f2;
+    }
+
+    input {
+      padding: 8px;
+      width: 200px;
+    }
+
+    button {
+      padding: 10px 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .fade {
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    .visible {
+      opacity: 1;
+    }
+
+    .shake-once {
+      animation: shakeOnce 0.5s ease;
+    }
+
+    @keyframes shakeOnce {
+      0% { transform: translateY(0); }
+      25% { transform: translateY(-5px); }
+      50% { transform: translateY(5px); }
+      75% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 謎1 -->
+  <h2>【謎1】黒板のメッセージ</h2>
+  <p>13, 1, 20, 5 をアルファベットに戻せ。<br>出てくる単語は？</p>
+  <input type="text" id="answer1" placeholder="答えを入力">
+  <button onclick="checkAnswer1()">送信</button>
+  <div id="result1" class="fade"></div>
+
+  <!-- 謎2（最初は非表示） -->
+  <div id="riddle2" class="hidden fade">
+    <h2>【謎2】教室の黒板の裏</h2>
+    <p>「さんかく」「しかく」「まる」…その順に並ぶ記号はどれ？</p>
+    <input type="text" id="answer2" placeholder="記号を入力">
+    <button onclick="checkAnswer2()">送信</button>
+    <div id="result2" class="fade"></div>
+  </div>
+
+  <script>
+    function fadeOut(elem) {
+      elem.classList.remove("visible");
+      setTimeout(() => {
+        elem.innerHTML = "";
+        elem.classList.remove("shake-once");
+      }, 800); // フェードアウト後に内容クリア
+    }
+
+    function checkAnswer1() {
+      const userAnswer = document.getElementById("answer1").value.trim().toLowerCase();
+      const correctAnswer = "cate";
+      const resultDiv = document.getElementById("result1");
+
+      if (userAnswer === correctAnswer) {
+        resultDiv.innerHTML = "⭕ 正解！ 次の謎へ進めます";
+        resultDiv.style.color = "green";
+        resultDiv.classList.remove("shake-once");
+        resultDiv.classList.add("visible");
+
+        setTimeout(() => {
+          fadeOut(resultDiv);
+          const r2 = document.getElementById("riddle2");
+          r2.classList.remove("hidden");
+          setTimeout(() => r2.classList.add("visible"), 50);
+        }, 2000);
+
+      } else {
+        resultDiv.innerHTML = "❌ 不正解です";
+        resultDiv.style.color = "red";
+        resultDiv.classList.add("visible", "shake-once");
+
+        setTimeout(() => {
+          fadeOut(resultDiv);
+        }, 1500);
+      }
+    }
+
+    function checkAnswer2() {
+      const userAnswer = document.getElementById("answer2").value.trim();
+      const correctAnswer = "★"; // 仮答え
+      const resultDiv = document.getElementById("result2");
+
+      if (userAnswer === correctAnswer) {
+        resultDiv.innerHTML = "⭕ 正解！ 謎2クリア！";
+        resultDiv.style.color = "green";
+        resultDiv.classList.add("visible");
+        setTimeout(() => fadeOut(resultDiv), 2000);
+      } else {
+        resultDiv.innerHTML = "❌ 不正解です";
+        resultDiv.style.color = "red";
+        resultDiv.classList.add("visible", "shake-once");
+        setTimeout(() => fadeOut(resultDiv), 1500);
+      }
+    }
+  </script>
+
+</body>
+</html>
