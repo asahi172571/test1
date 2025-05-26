@@ -6,7 +6,7 @@
   <style>
     body {
       font-family: monospace;
-      background-color: #0d1b2a;
+      background: linear-gradient(160deg, #1b263b, #324a5f);
       color: white;
       margin: 0;
       padding: 0;
@@ -22,7 +22,6 @@
       padding: 5px 12px;
       border-radius: 6px;
       z-index: 1000;
-      font-family: 'Courier New', Courier, monospace;
     }
     #mapButton, #chatButton {
       position: fixed;
@@ -43,7 +42,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background-color: #0d1b2a;
+      background-color: rgba(13,27,42,0.95);
       display: none;
       z-index: 999;
       padding: 60px 20px 20px 20px;
@@ -63,6 +62,19 @@
       margin-top: 10px;
       font-size: 18px;
     }
+    .feedback {
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .correct {
+      color: #80ff80;
+      animation: fadeOut 2s forwards;
+    }
+    .incorrect {
+      color: #ff8080;
+      animation: shake 0.3s, fadeOut 2s forwards;
+    }
     .hint-popup {
       position: fixed;
       top: 50%;
@@ -77,13 +89,13 @@
       animation: shake 1.5s, fadeout 0.5s 2s forwards;
       pointer-events: none;
     }
+    @keyframes fadeOut {
+      to { opacity: 0; }
+    }
     @keyframes shake {
       0%, 100% { transform: translate(-50%, -50%) translateY(0); }
       25% { transform: translate(-50%, -50%) translateY(-10px); }
       75% { transform: translate(-50%, -50%) translateY(10px); }
-    }
-    @keyframes fadeout {
-      to { opacity: 0; }
     }
   </style>
 </head>
@@ -98,13 +110,17 @@
   <div class="question" id="q1">
     <h2>謎1</h2>
     <p>「13, 1, 20, 5」をアルファベットに戻すと？</p>
-    <input type="text" oninput="checkAnswer(this, 'cate', 1)">
+    <input type="text" id="ans1">
+    <button onclick="submitAnswer(1, 'cate')">送信</button>
+    <div id="fb1" class="feedback"></div>
   </div>
 
   <div class="question" id="q2" style="display:none;">
     <h2>謎2</h2>
     <p>「さんかく」「しかく」「まる」…次は？</p>
-    <input type="text" oninput="checkAnswer(this, '★', 2)">
+    <input type="text" id="ans2">
+    <button onclick="submitAnswer(2, '★')">送信</button>
+    <div id="fb2" class="feedback"></div>
   </div>
 
   <script>
@@ -114,7 +130,7 @@
       if (start <= 0) return;
       start--;
       let m = String(Math.floor(start / 60)).padStart(2, '0');
-      let s = String(start % 60).padStart(2, '0');
+      let s = String(start % 60)).padStart(2, '0');
       timerElement.textContent = m + ":" + s;
     }, 1000);
 
@@ -125,38 +141,68 @@
 
     function toggleChat() {
       let chat = document.getElementById("chat");
-      chat.style.display = (chat.style.display === "none") ? "block" : "none";
+      let wasOpen = chat.style.display === "block";
+      chat.style.display = wasOpen ? "none" : "block";
+      if (!wasOpen && answered[1] && !shownQ2) {
+        document.getElementById("q2").style.display = "block";
+        shownQ2 = true;
+      }
     }
 
     let answered = {};
-    function checkAnswer(input, correct, qnum) {
-      if (answered[qnum]) return;
-      if (input.value.trim().toLowerCase() === correct.toLowerCase()) {
+    let shownQ2 = false;
+
+    function submitAnswer(qnum, correct) {
+      const input = document.getElementById("ans" + qnum);
+      const feedback = document.getElementById("fb" + qnum);
+      const val = input.value.trim().toLowerCase();
+
+      feedback.innerHTML = "";
+      if (val === correct.toLowerCase()) {
         answered[qnum] = true;
+        feedback.innerHTML = "⭕ 正解！";
+        feedback.className = "feedback correct";
+        setTimeout(() => {
+          showHint("[依頼人]", "さすがだな。次の部屋へ進め。", true);
+        }, 2000);
         document.getElementById("chatLog").innerHTML += "<br>[システム] 謎" + qnum + " 正解！";
-        if (qnum === 1) {
-          showHint("[依頼人] さすがだな。次の部屋へ進め。");
-        }
-        if (qnum < 5) {
-          let next = document.getElementById("q" + (qnum + 1));
-          if (next) next.style.display = "block";
-        }
+      } else {
+        feedback.innerHTML = "❌ 不正解";
+        feedback.className = "feedback incorrect";
       }
     }
 
-    function showHint(message) {
-      let hint = document.createElement("div");
-      hint.className = "hint-popup";
-      hint.textContent = "💬 新着メッセージ";
-      document.body.appendChild(hint);
-      setTimeout(() => hint.remove(), 2500);
-      if (message) {
-        document.getElementById("chatLog").innerHTML += "<br>" + message;
-      }
+    function showHint(who, message, openChat = false) {
+      const popup = document.createElement("div");
+      popup.className = "hint-popup";
+      popup.textContent = "💬 新着メッセージ";
+      document.body.appendChild(popup);
+      setTimeout(() => popup.remove(), 2500);
+
+      setTimeout(() => {
+        if (openChat) toggleChat();
+        simulateTyping(who, message);
+      }, 500);
     }
 
+    function simulateTyping(who, message) {
+      const log = document.getElementById("chatLog");
+      let current = `[${who}] `;
+      log.innerHTML += "<br>" + current;
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i >= message.length) {
+          clearInterval(interval);
+          return;
+        }
+        log.innerHTML = log.innerHTML.slice(0, -1) + message.slice(0, i + 1);
+        i++;
+      }, 30);
+    }
+
+    // ヒント（未正解）を5分後に出す
     setTimeout(() => {
-      if (!answered[1]) showHint("[依頼人] 少し助けになればいいが…");
+      if (!answered[1]) showHint("依頼人", "少し助けになればいいが…");
     }, 5 * 60 * 1000);
   </script>
 </body>
