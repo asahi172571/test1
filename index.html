@@ -46,7 +46,7 @@
       background-color: #0d1b2a;
       display: none;
       z-index: 999;
-      padding: 20px;
+      padding: 60px 20px 20px 20px;
       overflow-y: auto;
     }
     .question {
@@ -55,12 +55,13 @@
       max-width: 600px;
       background-color: #1b263b;
       border-left: 5px solid #a9d6e5;
+      font-size: 18px;
     }
     input[type="text"] {
       width: 80%;
-      padding: 10px;
+      padding: 12px;
       margin-top: 10px;
-      font-size: 16px;
+      font-size: 18px;
     }
     .hint-popup {
       position: fixed;
@@ -69,8 +70,8 @@
       transform: translate(-50%, -50%);
       background-color: #0d1b2a;
       color: white;
-      padding: 20px 30px;
-      font-size: 20px;
+      padding: 20px 40px;
+      font-size: 24px;
       border: 2px solid #a9d6e5;
       z-index: 2000;
       animation: shake 1.5s, fadeout 0.5s 2s forwards;
@@ -107,7 +108,7 @@
   </div>
 
   <script>
-    let start = 60 * 60; // 60分
+    let start = 60 * 60;
     let timerElement = document.getElementById("timer");
     setInterval(() => {
       if (start <= 0) return;
@@ -133,6 +134,9 @@
       if (input.value.trim().toLowerCase() === correct.toLowerCase()) {
         answered[qnum] = true;
         document.getElementById("chatLog").innerHTML += "<br>[システム] 謎" + qnum + " 正解！";
+        if (qnum === 1) {
+          showHint("[依頼人] さすがだな。次の部屋へ進め。");
+        }
         if (qnum < 5) {
           let next = document.getElementById("q" + (qnum + 1));
           if (next) next.style.display = "block";
@@ -140,18 +144,19 @@
       }
     }
 
-    function showHint() {
+    function showHint(message) {
       let hint = document.createElement("div");
       hint.className = "hint-popup";
       hint.textContent = "💬 新着メッセージ";
       document.body.appendChild(hint);
       setTimeout(() => hint.remove(), 2500);
-      document.getElementById("chatLog").innerHTML += "<br>[依頼人] 少し助けになればいいが…";
+      if (message) {
+        document.getElementById("chatLog").innerHTML += "<br>" + message;
+      }
     }
 
-    // タイマーでヒント出す（5分後）
     setTimeout(() => {
-      if (!answered[1]) showHint();
+      if (!answered[1]) showHint("[依頼人] 少し助けになればいいが…");
     }, 5 * 60 * 1000);
   </script>
 </body>
