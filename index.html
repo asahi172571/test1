@@ -188,14 +188,18 @@
     function simulateTyping(who, message) {
       const log = document.getElementById("chatLog");
       let current = `[${who}] `;
-      log.innerHTML += "<br>" + current;
+      const newLine = document.createElement("div");
+      newLine.className = "chat-line";
+      newLine.innerHTML = current;
+      log.appendChild(newLine);
+
       let i = 0;
       const interval = setInterval(() => {
         if (i >= message.length) {
           clearInterval(interval);
           return;
         }
-        log.innerHTML = log.innerHTML.slice(0, -1) + message.slice(0, i + 1);
+        newLine.innerHTML = current + message.slice(0, i + 1);
         i++;
       }, 30);
     }
