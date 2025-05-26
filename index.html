@@ -130,7 +130,7 @@
       if (start <= 0) return;
       start--;
       let m = String(Math.floor(start / 60)).padStart(2, '0');
-      let s = String(start % 60)).padStart(2, '0');
+      let s = String(start % 60).padStart(2, '0');
       timerElement.textContent = m + ":" + s;
     }, 1000);
 
