@@ -2,124 +2,157 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>謎解き - 謎1＆謎2</title>
+  <title>学園ミステリー謎解き</title>
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 30px;
-      background-color: #f2f2f2;
+      font-family: monospace;
+      background-color: #0d1b2a;
+      color: white;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
     }
-
-    input {
-      padding: 8px;
-      width: 200px;
+    #timer {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background-color: black;
+      color: red;
+      font-size: 24px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      z-index: 1000;
+      font-family: 'Courier New', Courier, monospace;
     }
-
-    button {
-      padding: 10px 20px;
+    #mapButton, #chatButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: #1b263b;
+      color: #a9d6e5;
+      border: none;
+      padding: 10px 15px;
+      margin-left: 5px;
+      cursor: pointer;
+      z-index: 1000;
     }
-
-    .hidden {
+    #mapButton { right: 120px; }
+    #map, #chat {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #0d1b2a;
       display: none;
+      z-index: 999;
+      padding: 20px;
+      overflow-y: auto;
     }
-
-    .fade {
-      opacity: 0;
-      transition: opacity 0.6s ease;
+    .question {
+      margin: 100px auto;
+      padding: 20px;
+      max-width: 600px;
+      background-color: #1b263b;
+      border-left: 5px solid #a9d6e5;
     }
-
-    .visible {
-      opacity: 1;
+    input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
     }
-
-    .shake-once {
-      animation: shakeOnce 0.5s ease;
+    .hint-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #0d1b2a;
+      color: white;
+      padding: 20px 30px;
+      font-size: 20px;
+      border: 2px solid #a9d6e5;
+      z-index: 2000;
+      animation: shake 1.5s, fadeout 0.5s 2s forwards;
+      pointer-events: none;
     }
-
-    @keyframes shakeOnce {
-      0% { transform: translateY(0); }
-      25% { transform: translateY(-5px); }
-      50% { transform: translateY(5px); }
-      75% { transform: translateY(-5px); }
-      100% { transform: translateY(0); }
+    @keyframes shake {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+      25% { transform: translate(-50%, -50%) translateY(-10px); }
+      75% { transform: translate(-50%, -50%) translateY(10px); }
+    }
+    @keyframes fadeout {
+      to { opacity: 0; }
     }
   </style>
 </head>
 <body>
+  <div id="timer">60:00</div>
+  <button id="mapButton" onclick="toggleMap()">マップ</button>
+  <button id="chatButton" onclick="toggleChat()">チャット</button>
 
-  <!-- 謎1 -->
-  <h2>【謎1】黒板のメッセージ</h2>
-  <p>13, 1, 20, 5 をアルファベットに戻せ。<br>出てくる単語は？</p>
-  <input type="text" id="answer1" placeholder="答えを入力">
-  <button onclick="checkAnswer1()">送信</button>
-  <div id="result1" class="fade"></div>
+  <div id="map"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Simple_school_layout.png/800px-Simple_school_layout.png" style="width:100%;"></div>
+  <div id="chat"><div id="chatLog">[依頼人] ようこそ調査員。この学園で事件が起きた。</div></div>
 
-  <!-- 謎2（最初は非表示） -->
-  <div id="riddle2" class="hidden fade">
-    <h2>【謎2】教室の黒板の裏</h2>
-    <p>「さんかく」「しかく」「まる」…その順に並ぶ記号はどれ？</p>
-    <input type="text" id="answer2" placeholder="記号を入力">
-    <button onclick="checkAnswer2()">送信</button>
-    <div id="result2" class="fade"></div>
+  <div class="question" id="q1">
+    <h2>謎1</h2>
+    <p>「13, 1, 20, 5」をアルファベットに戻すと？</p>
+    <input type="text" oninput="checkAnswer(this, 'cate', 1)">
+  </div>
+
+  <div class="question" id="q2" style="display:none;">
+    <h2>謎2</h2>
+    <p>「さんかく」「しかく」「まる」…次は？</p>
+    <input type="text" oninput="checkAnswer(this, '★', 2)">
   </div>
 
   <script>
-    function fadeOut(elem) {
-      elem.classList.remove("visible");
-      setTimeout(() => {
-        elem.innerHTML = "";
-        elem.classList.remove("shake-once");
-      }, 800); // フェードアウト後に内容クリア
+    let start = 60 * 60; // 60分
+    let timerElement = document.getElementById("timer");
+    setInterval(() => {
+      if (start <= 0) return;
+      start--;
+      let m = String(Math.floor(start / 60)).padStart(2, '0');
+      let s = String(start % 60).padStart(2, '0');
+      timerElement.textContent = m + ":" + s;
+    }, 1000);
+
+    function toggleMap() {
+      let map = document.getElementById("map");
+      map.style.display = (map.style.display === "none") ? "block" : "none";
     }
 
-    function checkAnswer1() {
-      const userAnswer = document.getElementById("answer1").value.trim().toLowerCase();
-      const correctAnswer = "cate";
-      const resultDiv = document.getElementById("result1");
+    function toggleChat() {
+      let chat = document.getElementById("chat");
+      chat.style.display = (chat.style.display === "none") ? "block" : "none";
+    }
 
-      if (userAnswer === correctAnswer) {
-        resultDiv.innerHTML = "⭕ 正解！ 次の謎へ進めます";
-        resultDiv.style.color = "green";
-        resultDiv.classList.remove("shake-once");
-        resultDiv.classList.add("visible");
-
-        setTimeout(() => {
-          fadeOut(resultDiv);
-          const r2 = document.getElementById("riddle2");
-          r2.classList.remove("hidden");
-          setTimeout(() => r2.classList.add("visible"), 50);
-        }, 2000);
-
-      } else {
-        resultDiv.innerHTML = "❌ 不正解です";
-        resultDiv.style.color = "red";
-        resultDiv.classList.add("visible", "shake-once");
-
-        setTimeout(() => {
-          fadeOut(resultDiv);
-        }, 1500);
+    let answered = {};
+    function checkAnswer(input, correct, qnum) {
+      if (answered[qnum]) return;
+      if (input.value.trim().toLowerCase() === correct.toLowerCase()) {
+        answered[qnum] = true;
+        document.getElementById("chatLog").innerHTML += "<br>[システム] 謎" + qnum + " 正解！";
+        if (qnum < 5) {
+          let next = document.getElementById("q" + (qnum + 1));
+          if (next) next.style.display = "block";
+        }
       }
     }
 
-    function checkAnswer2() {
-      const userAnswer = document.getElementById("answer2").value.trim();
-      const correctAnswer = "★"; // 仮答え
-      const resultDiv = document.getElementById("result2");
-
-      if (userAnswer === correctAnswer) {
-        resultDiv.innerHTML = "⭕ 正解！ 謎2クリア！";
-        resultDiv.style.color = "green";
-        resultDiv.classList.add("visible");
-        setTimeout(() => fadeOut(resultDiv), 2000);
-      } else {
-        resultDiv.innerHTML = "❌ 不正解です";
-        resultDiv.style.color = "red";
-        resultDiv.classList.add("visible", "shake-once");
-        setTimeout(() => fadeOut(resultDiv), 1500);
-      }
+    function showHint() {
+      let hint = document.createElement("div");
+      hint.className = "hint-popup";
+      hint.textContent = "💬 新着メッセージ";
+      document.body.appendChild(hint);
+      setTimeout(() => hint.remove(), 2500);
+      document.getElementById("chatLog").innerHTML += "<br>[依頼人] 少し助けになればいいが…";
     }
+
+    // タイマーでヒント出す（5分後）
+    setTimeout(() => {
+      if (!answered[1]) showHint();
+    }, 5 * 60 * 1000);
   </script>
-
 </body>
 </html>
